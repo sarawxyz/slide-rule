@@ -1,0 +1,205 @@
+---
+title: "Problem Set 3"
+output: html_document
+---
+***
+Diamonds:
+How many observations?   = 53940
+How many variables?      = 10
+How many ordered factors? = 3
+What value represent the best colour?   = D
+***
+
+```{r}
+setwd("Documents/DataScience/SlideRule/EDA")
+library(ggplot2)
+data(diamonds)
+
+str(diamonds)
+```
+
+***
+Make histogram, describe the distributionincluding summary values 
+such as the median and mean.
+
+Data is skewed/long-tailed to the right, with values ranging from 326 to 18820. The median is 2401, which is lower than the mean of 3933, as we would expect in a long-tailed distribution. The middle 50% of prices fall between 950 and 5324.
+***
+
+```{r Histogram of Price}
+ggplot(data = diamonds, aes(x = price)) +
+      geom_histogram(color = 'black', fill = 'green') +
+      xlab("Price") +
+      ylab("Number of Diamonds")
+
+summary(diamonds$price)
+```
+
+***
+How many cost less than $500?
+Less than $250?
+$15000 or more?
+***
+
+```{r Counts by Cost}
+length(subset(diamonds, diamonds$price < 500))  # doesn't work
+
+table(diamonds$price<500)
+table(diamonds$price<250)
+table(diamonds$price>=15000)
+```
+
+***
+Explore the largest peak in the
+price histogram you created earlier.
+
+Try limiting the x-axis, altering the bin width,
+and setting different breaks on the x-axis.
+
+```{r Exploring Histogram}
+ggplot(data = diamonds, aes(x = price)) +
+      geom_histogram(binwidth = 20) +
+      scale_x_continuous(limits = c(0, 1000))
+
+ggplot(data = diamonds, aes(x = price)) +
+      geom_histogram(binwidth = 100, colour = 'black', fill = '#099DD9') +
+      scale_x_continuous(breaks = seq(300, 1500, 100), limits = c(300, 1500))
+
+```
+
+***
+Break out the histogram of diamond prices by cut. You should have five 
+histograms in separate panels on your resulting plot.
+***
+
+```{r}
+str(diamonds)
+
+ggplot(data = diamonds, aes(x = price)) +
+      geom_histogram(binwidth = 100, color = 'black', fill = 'green') +
+      scale_x_continuous(breaks = seq(250, 10000, 100), limits = c(250, 10000)) +
+      xlab("Price") +
+      ylab("Number of Diamonds") +
+      facet_wrap(~cut)
+
+ggplot(data = diamonds, aes(x = price)) +
+      geom_histogram(binwidth = 100, color = 'black', fill = 'green') +
+      scale_x_continuous(breaks = seq(250, 5000, 100), limits = c(250, 5000)) +
+      xlab("Price") +
+      ylab("Number of Diamonds") +
+      facet_wrap(~cut)
+
+ggplot(data = diamonds, aes(x = price)) +
+      geom_histogram(binwidth = 100, color = 'black', fill = 'green') +
+      xlab("Price") +
+      ylab("Number of Diamonds") +
+      facet_wrap(~cut)
+
+by(diamonds$price, diamonds$cut, summary)
+by(diamonds$price, diamonds$cut, max)
+
+```
+
+***
+Allow y-axis to vary between plots
+***
+```{r}
+ggplot(data = diamonds, aes(x = price)) +
+      geom_histogram(binwidth = 100, color = 'black', fill = 'green') +
+      xlab("Price") +
+      ylab("Number of Diamonds") +
+      facet_wrap(~cut, scales="free_y")
+```
+
+***
+price per carat
+***
+
+```{r}
+ggplot(data = diamonds, aes(x = price/carat)) +
+      geom_histogram(color = 'black', fill = "#009E73") +
+      xlab("Price per Carat") +
+      ylab("Number of Diamonds") +
+      facet_wrap(~cut, scales="free_y") +
+      scale_x_log10()
+
+ggsave('pricepercarat.png')
+```
+
+***
+Investigate the price of diamonds using box plots, numerical summaries, 
+and one of the following categorical variables: cut, clarity, or color.
+***
+
+```{r}
+str(diamonds)
+
+ggplot(data = diamonds, aes(x = cut, y = price)) +
+      geom_boxplot()
+
+ggplot(data = diamonds, aes(x = cut, y = price)) +
+      geom_boxplot() +
+      coord_cartesian(ylim = c(250, 8000))
+
+table(diamonds$cut)
+by(diamonds$price, diamonds$cut, summary)
+
+ggplot(data = diamonds, aes(x = color, y = price)) +
+      geom_boxplot()
+
+ggplot(data = diamonds, aes(x = cut, y = price)) +
+      geom_boxplot() +
+      coord_cartesian(ylim = c(250, 10000))
+
+table(diamonds$color)
+by(diamonds$price, diamonds$color, summary)
+
+IQR(subset(diamonds, color == 'D')$price)
+IQR(subset(diamonds, color == 'J')$price)
+```
+
+***
+investigate price per carat across color, using boxplots
+***
+
+```{r}
+ggplot(data = diamonds, aes(x = color, y = price/carat)) +
+      geom_boxplot()
+
+ggplot(data = diamonds, aes(x = color, y = price/carat)) +
+      geom_boxplot() +
+      coord_cartesian(ylim = c(0, 7500))
+
+ggplot(data = diamonds, aes(y = price/carat, x = color)) +
+      geom_boxplot() +
+      facet_wrap(~color, scales = 'free_y')
+```
+
+***
+Investigate the weight of diamonds using a freq polygon. Change binwidth to 
+see how polygons are affected. What carat size has a count greter than 2000?
+***
+
+```{r}
+ggplot(data = diamonds, aes(x = carat)) +
+      geom_freqpoly()
+
+ggplot(data = diamonds, aes(x = carat)) +
+      geom_freqpoly(binwidth = .1) +
+      scale_x_continuous(breaks = seq(0, 3, .1), limits = c(0, 3))
+
+ggplot(data = diamonds, aes(x = carat)) +
+      geom_freqpoly(binwidth = .01) +
+      scale_x_continuous(breaks = seq(0, 3, .1), limits = c(0, 3))
+```
+
+
+
+
+***
+You can also embed plots, for example:
+
+```{r, echo=FALSE}
+plot(cars)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
