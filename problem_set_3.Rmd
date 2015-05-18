@@ -10,7 +10,7 @@ How many ordered factors? = 3
 What value represent the best colour?   = D
 ***
 
-```{r}
+```{r Load Data}
 setwd("Documents/DataScience/SlideRule/EDA")
 library(ggplot2)
 data(diamonds)
@@ -25,7 +25,7 @@ such as the median and mean.
 Data is skewed/long-tailed to the right, with values ranging from 326 to 18820. The median is 2401, which is lower than the mean of 3933, as we would expect in a long-tailed distribution. The middle 50% of prices fall between 950 and 5324.
 ***
 
-```{r Histogram of Price}
+```{r Diamonds: Histogram of Price}
 ggplot(data = diamonds, aes(x = price)) +
       geom_histogram(color = 'black', fill = 'green') +
       xlab("Price") +
@@ -40,7 +40,7 @@ Less than $250?
 $15000 or more?
 ***
 
-```{r Counts by Cost}
+```{r Diamonds: Counts by Cost}
 length(subset(diamonds, diamonds$price < 500))  # doesn't work
 
 table(diamonds$price<500)
@@ -55,7 +55,7 @@ price histogram you created earlier.
 Try limiting the x-axis, altering the bin width,
 and setting different breaks on the x-axis.
 
-```{r Exploring Histogram}
+```{r Diamonds: Exploring Histogram}
 ggplot(data = diamonds, aes(x = price)) +
       geom_histogram(binwidth = 20) +
       scale_x_continuous(limits = c(0, 1000))
@@ -71,7 +71,7 @@ Break out the histogram of diamond prices by cut. You should have five
 histograms in separate panels on your resulting plot.
 ***
 
-```{r}
+```{r Diamonds: Price by Cut}
 str(diamonds)
 
 ggplot(data = diamonds, aes(x = price)) +
@@ -102,7 +102,7 @@ by(diamonds$price, diamonds$cut, max)
 ***
 Allow y-axis to vary between plots
 ***
-```{r}
+```{r Diamonds: Free y-axis}
 ggplot(data = diamonds, aes(x = price)) +
       geom_histogram(binwidth = 100, color = 'black', fill = 'green') +
       xlab("Price") +
@@ -114,7 +114,7 @@ ggplot(data = diamonds, aes(x = price)) +
 price per carat
 ***
 
-```{r}
+```{r Diamonds: Price per Carat}
 ggplot(data = diamonds, aes(x = price/carat)) +
       geom_histogram(color = 'black', fill = "#009E73") +
       xlab("Price per Carat") +
@@ -130,7 +130,7 @@ Investigate the price of diamonds using box plots, numerical summaries,
 and one of the following categorical variables: cut, clarity, or color.
 ***
 
-```{r}
+```{r Diamonds: Price by Cut}
 str(diamonds)
 
 ggplot(data = diamonds, aes(x = cut, y = price)) +
@@ -161,7 +161,7 @@ IQR(subset(diamonds, color == 'J')$price)
 investigate price per carat across color, using boxplots
 ***
 
-```{r}
+```{r Diamonds: Price per Carat by Colour}
 ggplot(data = diamonds, aes(x = color, y = price/carat)) +
       geom_boxplot()
 
@@ -179,7 +179,7 @@ Investigate the weight of diamonds using a freq polygon. Change binwidth to
 see how polygons are affected. What carat size has a count greter than 2000?
 ***
 
-```{r}
+```{r Diamonds: Frequency Polygons}
 ggplot(data = diamonds, aes(x = carat)) +
       geom_freqpoly()
 
@@ -192,14 +192,62 @@ ggplot(data = diamonds, aes(x = carat)) +
       scale_x_continuous(breaks = seq(0, 3, .1), limits = c(0, 3))
 ```
 
-
-
-
 ***
-You can also embed plots, for example:
+GapMinder data EDA
+data set = killed in storms
+***
 
-```{r, echo=FALSE}
-plot(cars)
+```{r GapMinder Data}
+library(tidyr)
+library(dplyr)
+library(gapminder)
+
+gapm <- gapminder
+head(gapm)
+
+by(gapm$lifeExp, gapm$continent, median)
+aggregate(lifeExp ~ continent, gapm, median)
+
+gapm %>%
+    filter(year == 2007) %>%
+    group_by(continent) %>%
+    summarise(lifeExp = median(lifeExp))
+
+ggplot(gapm, aes(x = pop)) +
+      geom_histogram() +
+      scale_x_log10()
+
+ggplot(gapm, aes(x = lifeExp)) +
+      geom_histogram() +
+      theme_bw()
+
+ggplot(gapm, aes(x = gdpPercap)) +
+      geom_histogram() +
+      theme_bw()
+
+ggplot(gapm, aes(x = gdpPercap)) +
+      geom_histogram() +
+      scale_x_log10() +
+      theme_bw()
+
+ggplot(gapm, aes(x = continent, y = lifeExp)) +
+      geom_boxplot(outlier.colour = "hotpink")
+
+ggplot(gapm, aes(x = continent, y = lifeExp)) +
+      geom_boxplot(outlier.colour = "hotpink") +
+      geom_jitter(position = position_jitter(width = 0.1, height = 0), alpha = 1/4)
+
+ggplot(gapm, aes(x = continent, y = pop)) +
+      geom_boxplot(outlier.colour = "hotpink") +
+      coord_cartesian(ylim = c(0, 250000000))
+
+ggplot(gapm, aes(x = continent, y = gdpPercap)) +
+      geom_boxplot(outlier.colour = "hotpink") +
+      coord_cartesian(ylim = c(0, 40000))
+
+highgdp <- subset(gapm, gdpPercap >= 30000)
+
+ggplot(highgdp, aes(x = continent, y = gdpPercap)) +
+      geom_boxplot()
+
 ```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
