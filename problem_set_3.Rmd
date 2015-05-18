@@ -251,3 +251,43 @@ ggplot(highgdp, aes(x = continent, y = gdpPercap)) +
       geom_boxplot()
 
 ```
+
+***
+Birthdays
+***
+```{r Birthday Problem}
+library(lubridate)
+bdays <- read.csv('birthdaysExample.csv')
+head(bdays)
+str(bdays)
+bdays$dates <- strptime(bdays$dates, "%m/%d/%y")
+bdays$dates <- as.POSIXct(bdays$dates)
+bdays$month <- month(bdays$dates)
+summary(bdays$dates)
+
+# shares my bday: 1
+ggplot(data = subset(bdays, month == 8), aes(x = dates)) +
+      geom_histogram(color = 'black', fill = "#009E73")
+
+sum(bdays$dates == '2014-08-20')
+
+# month with most bdays: March
+ggplot(data = bdays, aes(x = month)) +
+      geom_histogram(color = 'black', fill = "#009E73") +
+      scale_x_continuous(breaks = seq(1, 12, 1))    # why gaps btwn bars?
+bdays$month <- as.integer(bdays$month)  # didn't work to remove gaps in histo
+
+table(bdays$month)
+
+# day of year with most bdays: Feb 6
+mode(bdays$dates)  # doesn't work?
+sort(table(bdays$dates), decreasing = TRUE)[1:5]
+
+ggplot(bdays, aes(x = dates)) +
+      geom_freqpoly()
+
+# bday on every day of the year: no
+length(table(bdays$dates))
+
+```
+
