@@ -1,0 +1,334 @@
+Lesson 4
+========================================================
+
+```{r}
+library(ggplot2)
+setwd("Documents/DataScience/SlideRule/EDA")
+pf <- read.delim('pseudo_facebook.tsv')
+names(pf)
+```
+
+
+***
+
+### Scatterplots and Perceived Audience Size
+
+***
+
+```{r Scatterplots}
+
+ggplot(pf, aes(age, friend_count)) +
+      geom_point()
+```
+
+
+***
+### Building up layers in ggplot
+***
+
+```{r ggplot Syntax}
+ggplot(pf, aes(age, friend_count)) +
+      geom_point() +
+      xlim(13, 90)
+```
+
+***
+
+### Overplotting
+Notes: When there are too many data points, when plotted they 
+obscure the detail
+***
+
+```{r Overplotting}
+ggplot(pf, aes(age, friend_count)) +
+      geom_jitter(alpha = 1/20) +
+      xlim(13, 90)
+```
+
+***
+
+### Coord_trans()
+Notes: Used to apply transform tospecified axis (axes). Transform applied after statistics, whereas using scales to transform does it before? Unclear.
+***
+
+```{r Coord_trans()}
+ggplot(pf, aes(age, friend_count)) +
+      geom_point(alpha = 1/20) +
+      xlim(13, 90) +
+      coord_trans(y = "sqrt")
+
+# applied sqrt transform to y-axis, same as using scale_y_sqrt()
+```
+
+***
+### Alpha and Jitter
+Notes: alpha level specified how dark the points are: is set to 1/20, 
+it will take 20 data points of a particular value to show at full darkness; 
+lighter points on the graph have fewer cases. Jitter adds random noise to
+the data, to allow for easier viewing when graph is overplotted. Can be done
+with geom_jitter for simple plots; once we have added the coord_trans layer 
+we need to be more careful in specifying the jitter (and use h = 0 so that we 
+won't add negative noise to 0 values, for which the sqrt transform will 
+be NaN.)
+***
+
+```{r Alpha and Jitter}
+ggplot(pf, aes(age, friend_count)) +
+      geom_jitter(alpha = 1/20) +
+      xlim(13, 90)
+
+ggplot(pf, aes(age, friend_count)) +
+      geom_point(alpha = 1/20, position = position_jitter(h = 0)) +
+      xlim(13, 90) +
+      coord_trans(y = "sqrt")
+```
+
+```{r Friends Initiated and Age}
+ggplot(pf, aes(age, friendships_initiated)) +
+      geom_point()
+
+ggplot(pf, aes(age, friendships_initiated)) +
+      geom_jitter() +
+      xlim(13, 90)
+
+ggplot(pf, aes(age, friendships_initiated)) +
+      geom_point(alpha = 1/20) +
+      xlim(13, 90) +
+      coord_trans(y = "sqrt")
+
+ggplot(pf, aes(age, friendships_initiated)) +
+      geom_point(alpha = 1/10, position = position_jitter(h = 0)) +
+      xlim(13, 90) +
+      coord_trans(y = "sqrt")
+```
+
+***
+### Conditional Means
+Notes:
+
+```{r Conditional Means}
+library(dplyr)
+
+pf.by_age_grp <- pf %>%
+      group_by(age) %>%
+      summarize (friend_mean = mean(friend_count),
+                 friend_median = median(friend_count),
+                 n = n()) %>%
+      arrange(age)
+
+head(pf.by_age_grp)
+```
+
+Create your plot!
+
+```{r Conditional Means Plot}
+ggplot(pf.by_age_grp, aes(x = age, y = friend_mean))+
+      geom_point()
+
+ggplot(pf.by_age_grp, aes(x = age, y = friend_mean))+
+      geom_line()
+```
+
+***
+
+### Overlaying Summaries with Raw Data
+Notes:
+
+```{r Overlaying Summaries with Raw Data}
+ggplot(pf, aes(age, friend_count)) +
+      geom_point(alpha = 1/20, 
+                 position = position_jitter(h = 0),
+                 colour = 'orange') +
+      coord_trans(y = 'sqrt')
+
+ggplot(pf, aes(age, friend_count)) +
+      geom_point(alpha = 1/20, 
+                 position = position_jitter(h = 0),
+                 colour = 'orange') +
+      coord_trans(y = 'sqrt') +
+      geom_line(stat = 'summary', fun.y = mean)
+
+ggplot(pf, aes(age, friend_count)) +
+      geom_point(alpha = 1/20, 
+                 position = position_jitter(h = 0),
+                 colour = 'orange') +
+      geom_line(stat = 'summary', fun.y = mean) +
+      geom_line(stat = 'summary', fun.y = quantile, probs = .1,
+                linetype = 2, colour = 'blue') +
+      geom_line(stat = 'summary', fun.y = quantile, probs = .5,
+                colour = 'blue') +
+      geom_line(stat = 'summary', fun.y = quantile, probs = .9,
+                linetype = 2, colour = 'blue') +
+      coord_cartesian(ylim = c(0, 1000))  # remove coord_trans layer when using
+```
+
+#### What are some of your observations of the plot?
+Response: data becomes noisy and disperse above ~age 80. median consistently below mean, as expected of a skewed distribution. median and mean both peak from about the late teens through the early 20's. the interval between the 10th and 90th quantiles becomes narrower with age, indicating less dispersed data (less variation in friend count)
+
+***
+
+### Moira: Histogram Summary and Scatterplot
+See the Instructor Notes of this video to download Moira's paper on perceived audience size and to see the final plot.
+
+Notes:
+
+***
+
+### Correlation
+Notes:
+
+```{r Correlation}
+
+```
+
+Look up the documentation for the cor.test function.
+
+What's the correlation between age and friend count? Round to three decimal places.
+Response:
+
+***
+
+### Correlation on Subsets
+Notes:
+
+```{r Correlation on Subsets}
+with(                 , cor.test(age, friend_count))
+```
+
+***
+
+### Correlation Methods
+Notes:
+
+***
+
+## Create Scatterplots
+Notes:
+
+```{r}
+
+```
+
+***
+
+### Strong Correlations
+Notes:
+
+```{r Strong Correlations}
+
+```
+
+What's the correlation betwen the two variables? Include the top 5% of values for the variable in the calculation and round to 3 decimal places.
+
+```{r Correlation Calcuation}
+
+```
+
+Response:
+
+***
+
+### Moira on Correlation
+Notes:
+
+***
+
+### More Caution with Correlation
+Notes:
+
+```{r More Caution With Correlation}
+install.packages('alr3')
+library(alr3)
+```
+
+Create your plot!
+
+```{r Temp vs Month}
+
+```
+
+***
+
+### Noisy Scatterplots
+a. Take a guess for the correlation coefficient for the scatterplot.
+
+b. What is the actual correlation of the two variables?
+(Round to the thousandths place)
+
+```{r Noisy Scatterplots}
+
+```
+
+***
+
+### Making Sense of Data
+Notes:
+
+```{r Making Sense of Data}
+
+```
+
+***
+
+### A New Perspective
+
+What do you notice?
+Response:
+
+Watch the solution video and check out the Instructor Notes!
+Notes:
+
+***
+
+### Understanding Noise: Age to Age Months
+Notes:
+
+```{r Understanding Noise: Age to Age Months}
+
+```
+
+***
+
+### Age with Months Means
+
+```{r Age with Months Means}
+
+```
+
+Programming Assignment
+```{r Programming Assignment}
+
+```
+
+***
+
+### Noise in Conditional Means
+
+```{r Noise in Conditional Means}
+
+```
+
+***
+
+### Smoothing Conditional Means
+Notes:
+
+```{r Smoothing Conditional Means}
+
+```
+
+***
+
+### Which Plot to Choose?
+Notes:
+
+***
+
+### Analyzing Two Variables
+Reflection:
+
+***
+
+Click **KnitHTML** to see all of your hard work and to have an html
+page of this lesson, your answers, and your notes!
+
