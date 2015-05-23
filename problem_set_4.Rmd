@@ -1,0 +1,244 @@
+---
+title: "problem_set_4"
+output: html_document
+---
+
+
+```{r Scatterplot of price vs x}
+setwd("Documents/DataScience/SlideRule/EDA")
+library(ggplot2)
+
+data(diamonds)
+names(diamonds)
+
+ggplot(diamonds, aes(x = x, y = price)) +
+      geom_point()
+```
+
+
+```{r Correlations with price}
+
+with(diamonds, cor.test(price, x))
+with(diamonds, cor.test(price, y))
+with(diamonds, cor.test(price, z))
+```
+price, x  r^2 = 0.88
+price, y  r^2 = 0.87
+price, z  r^2 = 0.86
+
+***
+
+Scatterplot of price v depth. Change the code to make the transparency of the
+points to be 1/100 of what they are now and mark the x-axis every 2 units. Calculate correlation.
+
+```{r Price v Depth}
+ggplot(diamonds, aes(x = depth, y = price)) +
+      geom_point()
+
+max(diamonds$depth)
+max(diamonds$price)
+
+ggplot(diamonds, aes(x = depth, y = price)) +
+      geom_point(alpha = 1/100) +
+      scale_x_continuous(breaks = seq(0, 79, 2))
+
+with(diamonds, cor.test(price, depth))
+```
+
+Most diamonds have a depth value between 58 and 64. Correlation of price with 
+depth is -0.011.
+
+***
+Scatterplot of price v carat, ommitting top 1% of values.
+
+```{r Price v Carat}
+ggplot(diamonds, aes(x = carat, y = price)) +
+      geom_point() +
+      xlim(0, quantile(diamonds$carat, .99)) +
+      ylim(0, quantile(diamonds$price, .99))
+
+```
+
+***
+Create a scatterplot of price vs. volume (x * y * z). This is a very 
+rough approximation for a diamond's volume.  Create a new variable 
+for volume in the diamonds data frame. Run correlation on subset of 
+volume.
+
+```{r Price v volume}
+
+ggplot(diamonds, aes(x = (x*y*z), y = price)) +
+      geom_point() +
+      xlab("volume")
+
+diamonds$volume <- with(diamonds, x*y*z)
+
+library(plyr)
+count(diamonds$volume == 0)
+
+detach("package:plyr", unload=TRUE)
+
+with(subset(diamonds, volume >0 & volume <=800), cor.test(price, volume))
+
+```
+
+Observations: two possible outliers, one with a volume value near 800, 
+another with a volume near 3800.  20 diamonds have volume = 0. otherwise 
+distribution looks exponential. Correlation of price with volume, when 
+volume is >0 and <=800, is 0.924.
+
+***
+
+Adjusted plot for price v volume. Add linear model. Is this a good model 
+for these data?
+
+```{r Price v Volume, adjusted}
+
+ggplot(subset(diamonds, volume >0 & volume <=800), 
+       aes(x = volume, y = price)) +
+      geom_point(alpha = 1/10) +
+      ylim(0, 20000) +
+      geom_smooth(method = 'lm', colour = 'red')
+
+```
+
+Observations: Not the worst model, but not optimal.  The relationship between
+price and volume appears to be exponential, not linear.
+
+***
+
+Create a new data frame containing info on diamonds by clarity. 
+Name the data frame diamondsByClarity. It should contain the following 
+variables in this order:
+     (1) mean_price
+     (2) median_price
+     (3) min_price
+     (4) max_price
+     (5) n
+where n is the number of diamonds in each level of clarity.
+
+```{r Diamonds by Clarity}
+
+library(dplyr)
+
+diamondsByClarity <- diamonds %>%
+      group_by(clarity) %>%
+      summarize(mean_price = mean(price),
+                median_price = median(price) * 1.0,   # to avoid error below
+                min_price = min(price),
+                max_price = max(price),
+                n = n()) %>%
+      arrange(clarity)
+
+# error: loss of precision when attempting to convert numeric to integer
+```
+
+***
+
+Bar charts, colour and clarity. Create two bar plots on one output 
+image using the grid.arrange() function from the package gridExtra.
+
+```{r Colour and Clarity}
+library(gridExtra)
+
+diamonds_by_clarity <- group_by(diamonds, clarity)
+diamonds_mp_by_clarity <- summarise(diamonds_by_clarity, mean_price = mean(price))
+
+diamonds_by_color <- group_by(diamonds, color)
+diamonds_mp_by_color <- summarise(diamonds_by_color, mean_price = mean(price))
+
+p1 <- ggplot(diamonds_mp_by_clarity, aes(x = clarity, y = mean_price)) +
+          geom_bar(stat = 'identity') +
+          ylab("average price")
+           
+
+p2 <- ggplot(diamonds_mp_by_color, aes(x = color, y = mean_price)) +
+      geom_bar(stat = 'identity') +
+       ylab("average price")
+
+grid.arrange(p1, p2)
+
+diamonds_by_cut <- group_by(diamonds, cut)
+diamonds_mp_by_cut <- summarise(diamonds_by_cut, mean_price = mean(price))
+
+ggplot(diamonds_mp_by_cut, aes(x = cut, y = mean_price)) +
+      geom_bar(stat = 'identity') +
+       ylab("average price")
+
+```
+
+***
+Gapminder con't: examine pairs of variable and create 2-5 plots that make
+use of the techniques from Lesson 4.
+
+```{r Gapminder EDA}
+library(gapminder)
+
+gapm <- gapminder
+head(gapm)
+names(gapm)
+summary(gapm$year)
+
+with(gapm, cor.test(lifeExp, gdpPercap))
+
+gapm_1952_by_cont <- gapm %>%
+      filter(year == 1952) %>%
+      group_by(continent) %>%
+      summarize(mean_lifeExp = mean(lifeExp),
+                median_lifeExp = median(lifeExp),
+                mean_pop = mean(pop),
+                median_pop = median(pop),
+                mean_gdp = mean(gdpPercap),
+                median_gdp = median(gdpPercap),
+                n = n())
+
+gapm_2007_by_cont <- gapm %>%
+      filter(year == 2007) %>%
+      group_by(continent) %>%
+      summarize(mean_lifeExp = mean(lifeExp),
+                median_lifeExp = median(lifeExp),
+                mean_pop = mean(pop),
+                median_pop = median(pop),
+                mean_gdp = mean(gdpPercap),
+                median_gdp = median(gdpPercap),
+                n = n())
+
+ggplot(gapm_1952_by_cont, aes(x = continent, y = mean_lifeExp)) +
+      geom_bar(stat = 'identity')
+
+p1 <- ggplot(gapm_1952_by_cont,
+             aes(x = continent, y = median_lifeExp, fill = continent)) +
+      geom_bar(stat = 'identity') +
+      scale_y_continuous(limits = c(0, 80)) +
+      ylab("median life expectancy") +
+      ggtitle("1952")
+
+p2 <- ggplot(gapm_2007_by_cont, 
+             aes(x = continent, y = median_lifeExp, fill = continent)) +
+      geom_bar(stat = 'identity') +
+      ylab("median life expectancy") +
+      ggtitle("2007")
+
+grid.arrange(p1, p2)
+
+p3 <- ggplot(gapm_1952_by_cont,
+             aes(x = continent, y = median_gdp, fill = continent)) +
+      geom_bar(stat = 'identity') +
+      scale_y_continuous(limits = c(0, 30000)) +
+      ylab("median GDP") +
+      ggtitle("1952")
+
+p4 <- ggplot(gapm_2007_by_cont, 
+             aes(x = continent, y = median_gdp, fill = continent)) +
+      geom_bar(stat = 'identity') +
+      ylab("median gdp") +
+      ggtitle("2007")
+
+grid.arrange(p3, p4)
+
+ggplot(gapm, aes(x = gdpPercap, y = lifeExp, color = year)) +
+      geom_point() +
+      ylab("life expectancy") +
+      xlab("GDP per capita")
+```
+
