@@ -1,0 +1,157 @@
+---
+title: "Problem Set 5"
+output: html_document
+---
+
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+setwd("Documents/DataScience/SlideRule/EDA")
+
+data(diamonds)
+```
+
+***
+Create a histogram of diamond prices.Facet the histogram by diamond color 
+and use cut to color the histogram bars.
+
+```{r Price Histograms with Facet and Color}
+library(RColorBrewer)
+
+ggplot(diamonds, aes(x = price, fill = cut)) +
+      geom_histogram() +
+      scale_x_log10() +
+      facet_wrap(~ color) +
+      scale_fill_brewer(type = 'qual')
+
+```
+
+***
+Create a scatterplot of diamond price vs. table and color the points by 
+the cut of the diamond.
+
+```{r Price vs. Table Colored by Cut}
+
+ggplot(diamonds, aes(x = table, y = price, color = cut)) +
+      geom_jitter(size = 3, h = 0) +
+      scale_x_continuous(breaks = seq(50, 80, 2), limits = c(50, 80)) +
+      scale_color_brewer(type = 'qual')  # qualitative color scheme
+
+```
+
+***
+Create a scatterplot of diamond price vs. volume (x * y * z) and color 
+the points by the clarity of diamonds. Use scale on the y-axis to take the 
+log10 of price. You should also omit the top 1% of diamond volumes from 
+the plot.
+
+```{r Price vs. Volume and Diamond Clarity}
+diamonds$volume <- with(diamonds, x*y*z)
+ggplot(subset(diamonds, volume > 0), 
+       aes(x = volume, y = price, color = clarity)) +
+      geom_point() +
+      scale_y_log10() +
+      xlim(0, quantile(diamonds$volume, .99)) +   # omit top 1% of values
+      scale_color_brewer(type = 'div')   #diverging color scheme
+
+```
+
+***
+Create a new variable called 'prop_initiated' in the Pseudo-Facebook 
+data set. The variable should contain the proportion of friendships 
+that the user initiated. Then create a line graph of the median proportion of
+friendships initiated ('prop_initiated') vs. tenure and color the line 
+segment by year_joined.bucket.
+
+```{r Proportion of Friendships Initiated}
+pf <- read.delim('pseudo_facebook.tsv')
+names(pf)
+
+pf$prop_initiated <- with(pf, round(friendships_initiated / friend_count * 100))
+pf$year_joined <- floor(2014 - pf$tenure / 365)
+pf$year_joined.bucket <- cut(pf$year_joined, 
+                             breaks = c(2004, 2009, 2011, 2012, 2014),
+                             include.lowest = FALSE)
+
+# line graph of the median proportion of friendships initiated
+# ('prop_initiated') vs. tenure, line colored by year_joined.bucket
+ggplot(subset(pf, !is.na(prop_initiated)), aes(x = tenure, y = prop_initiated)) +
+      geom_line(aes(colour = year_joined.bucket), stat = 'summary', fun.y = median)
+
+# code above doesn't work, although it did work once. code below is same 
+# structure and works. stackoverload says issue w R 3.2.0
+ggplot(subset(pf, !is.na(gender)), aes(x = age, y = friend_count)) +
+      geom_line(aes(colour = gender), stat = 'summary', fun.y = median)
+
+# recreate graph with smoother
+ggplot(subset(pf, !is.na(prop_initiated)), aes(x = tenure, y = prop_initiated)) +
+      geom_smooth(aes(colour = year_joined.bucket))
+
+# which group has highest proportion of friendships initiated? = 2012-2014
+# what is their mean proportion initiated?   = 0.6654
+by(pf$prop_initiated, pf$year_joined.bucket, summary)
+
+```
+
+***
+Create a scatter plot of the price/carat ratio of diamonds. The variable 
+x should be assigned to cut. The points should be colored by diamond color, 
+and the plot should be faceted by clarity.
+
+```{r Price/Carat Binned, Faceted, & Colored}
+data(diamonds)
+ggplot(diamonds, aes(x = cut, y = price / carat, color = color)) +
+      geom_jitter() +
+      facet_wrap(~ clarity) +
+      scale_color_brewer(type = 'div')
+
+```
+
+***
+Gapminder con't
+In your investigation, examine 3 or more variables and create 2-5 plots 
+that make use of the techniques from Lesson 5.
+
+```{r Gapminder}
+library(gapminder)
+
+gapm <- gapminder
+head(gapm)
+names(gapm)
+table(gapm$year)
+
+# bar graph of GDP over time, coloured by continent
+ggplot(gapm, aes(x = year, y = gdpPercap, fill = continent)) +
+      geom_bar(stat = 'summary', fun.y = median) +
+      scale_fill_brewer(type = 'qual')
+
+# scatterplots of life expectancy by year, coloured by GDP, 
+# facetted by continent
+ggplot(gapm, aes(x = year, y = lifeExp, color = log10(gdpPercap))) +
+      geom_jitter(size = 3) +
+      facet_wrap(~ continent)
+
+# line graph of change in life expectancy by country, faceted by
+# continent
+ggplot(subset(gapm, year == 1952 | year == 2007), aes(x = year, y = lifeExp)) +
+  geom_line(aes(color = country)) +
+  scale_colour_manual(values = country_colors) +
+      facet_wrap(~ continent)
+
+# line graphs of median life expectancy, GDP and population
+# over time, by continent
+p1 <- ggplot(gapm, aes(x = year, y = lifeExp, color = continent)) +
+            geom_line(stat = 'summary', fun.y = median)
+
+p2 <- ggplot(gapm, aes(x = year, y = gdpPercap, color = continent)) +
+            geom_line(stat = 'summary', fun.y = median)
+
+p3 <- ggplot(gapm, aes(x = year, y = pop, color = continent)) +
+            geom_line(stat = 'summary', fun.y = median)
+
+grid.arrange(p1, p2)
+
+```
+
